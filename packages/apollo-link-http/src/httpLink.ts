@@ -32,8 +32,11 @@ export namespace HttpLink {
   }
 }
 
-const MESSAGE_NO_READABLE_STREAM = `Your browser does not support the ReadableStream API, which is needed to read streaming multipart HTTP responses for deferred queries.
-Apollo Client will only parse the response when all the parts arrive.`;
+const MESSAGE_NO_READABLE_STREAM =
+  window === undefined
+    ? `For deferred query support when running your GraphQL client in Node.js, please use the 'node-fetch-polyfill' that supports the ReadableStream API. You also need to polyfill for TextEncoder and TextDecoder on the 'global' object.`
+    : `Your browser does not support the ReadableStream API, which is needed to read streaming multipart HTTP responses for deferred queries. Apollo Client will only parse the response when all the parts arrive.
+`;
 
 function throwParseError() {
   throw new Error('Invalid multipart response from GraphQL server');
@@ -203,6 +206,7 @@ export const createHttpLink = (linkOptions: HttpLink.Options = {}) => {
           ) {
             if (
               response.body !== undefined &&
+              typeof response.body.getReader === 'function' &&
               typeof TextDecoder !== 'undefined' &&
               typeof TextEncoder !== 'undefined'
             ) {
